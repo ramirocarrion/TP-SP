@@ -48,9 +48,7 @@
     add ebx, eax        ; ebx = fila * 160 + columna
 
     ; Establecer el puntero al buffer de pantalla en (fila, columna)
-    mov ebx, 0xb8000    ; ebx = puntero a la base del buffer de video
-    shl eax, 1          ; Cada posicion de la memoria de video ocupa un word
-    add ebx, eax        ; ebx = puntero a la posicion (fila, columna)
+    add ebx, 0xb8000 
 
     ; Cargar mensaje, longitud y color
     pop edi             ; edi = puntero al mensaje
