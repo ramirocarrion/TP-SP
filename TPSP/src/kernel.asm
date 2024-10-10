@@ -73,6 +73,20 @@ modo_protegido:
     ; COMPLETAR - Inicializar pantalla
     
    
+    ; COMPLETAR - Inicializar y cargar la IDT
+
+    ; COMPLETAR - Reiniciar y habilitar el controlador de interrupciones
+
+    ; COMPLETAR - Habilitar interrupciones
+    ; NOTA: Pueden chequear que las interrupciones funcionen forzando a que se
+    ;       dispare alguna excepción (lo más sencillo es usar la instrucción
+    ;       `int3`)
+    ;int3
+
+    ; Probar Sys_call
+
+    ; Probar generar una excepción
+
     ; Ciclar infinitamente 
     mov eax, 0xFFFF
     mov ebx, 0xFFFF
