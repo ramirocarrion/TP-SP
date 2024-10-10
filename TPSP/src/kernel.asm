@@ -100,7 +100,24 @@ modo_protegido:
      print_text_pm start_pm_msg, start_pm_len, 0x1F, 0, 0
 
     ; COMPLETAR - Inicializar pantalla
+
     call screen_draw_layout
+
+    
+   
+    ; COMPLETAR - Inicializar y cargar la IDT
+
+    ; COMPLETAR - Reiniciar y habilitar el controlador de interrupciones
+
+    ; COMPLETAR - Habilitar interrupciones
+    ; NOTA: Pueden chequear que las interrupciones funcionen forzando a que se
+    ;       dispare alguna excepción (lo más sencillo es usar la instrucción
+    ;       `int3`)
+    ;int3
+
+    ; Probar Sys_call
+
+    ; Probar generar una excepción
 
     ; Ciclar infinitamente 
     mov eax, 0xFFFF
