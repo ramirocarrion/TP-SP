@@ -1,4 +1,4 @@
-# Taller de System Programming
+# Trabajo Práctico de System Programming
 
 Arquitectura y Organización del Computador
 
