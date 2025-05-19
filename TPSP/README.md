@@ -70,30 +70,34 @@ y tareas sencillas.
 
 ## Preparación: actualizando su fork del repositorio grupal
 
-Es importante que, para este taller y los próximos **no creen un nuevo fork de este repositorio** si no que actualicen el repositorio grupal que estaban utilizando para el tp1.
+Iremos agregando distintas partes al TP a medida que vayamos presentando los temas correspondientes. En general estas partes llegarán en forma de un **PR automáticamente abierto en su repositorio y deben aceptar**. Dejamos instrucciones de como hacerlo en la próxima sección. Puede ocurrir que dichos PRs fallen en crearse, en cuyo caso deben seguir las instrucciones de la sección correspondiente más abajo **en una branch distinta a main**. Es probable que una vez actualicen main manualmente, no podamos crear más PRs automáticos para entregas siguientes. Solo tiene 4 partes el TP, así que esto no es grave.
 
-Estas son las instrucciones para sincronizar su fork grupal con el taller de **system programming**:
+### Actualizando su fork mediante el PR automático
+[Pendiente]
+
+### Actualizando su fork manualmente
+Estas son las instrucciones para sincronizar manualmente su fork grupal con el taller de **system programming**. Deben seguirlas en una branch distinta a main.
 
 1. Agregar el repositorio de la cátedra como *upstream* remoto:
    - Si usaron https:
 	```sh
-	git remote add upstream https://git.exactas.uba.ar/ayoc-doc/grupal-<id_cuatrimestre>.git
+	git remote add upstream https://github.com/AyOC-exactas/TP-SP.git
 	```
    - Si usaron ssh:
 	```sh
-	git remote add upstream git@git.exactas.uba.ar:ayoc-doc/grupal-<id_cuatrimestre>.git
+	git remote add upstream git@github.com:AyOC-exactas/TP-SP.git
 	```
 2. Traer el último estado del upstream
 ```sh
 git fetch upstream
 ```
-3. Moverse al branch principal (`master`) si habían cambiado de branch, ya que los cambios se sincronizarán en dicho branch únicamente
+3. Moverse al branch donde quieran traer los cambios, se sincronizarán en dicha branch únicamente
 ```sh
-git checkout master
+git checkout <branch>
 ```
 4. Combinar los cambios locales con los del *upstream*
 ```sh
-git merge upstream/master
+git merge upstream/main
 ```
 
 Es posible que al ejecutar el merge les aparezca CONFLICT y diga que arreglen los conflictos para poder terminar el merge.
@@ -106,6 +110,6 @@ git commit -m "Merge con actualizaciones cátedra"
 git push origin
 ```
 
-Cuando subamos las siguientes partes del taller, o si actualizamos algún archivo del mismo, deberán seguir estas mismas instrucciones para sincronizar su repositorio con el de la cátedra.
-
-Para actualizar su fork con cambios del repositorio de la cátedra, que llamaremos "upstream", deben ejecutar los siguientes comandos desde la línea de comandos, estando ubicados dentro del clon local de su fork (de no recordar como clonar localmente su fork del repositorio grupal, revisitar las instrucciones del tp0)
+Cuando estén listos para avanzar con la siguiente parte del taller, tienen dos opciones. Antes de hacer cualquiera de las dos **deben** pararse en la branch donde estuvieron trabajando en la solución de la parte anterior y pushear todos sus cambios actuales mediante `git push`.
+1. Crear una nueva branch desde main y traer los cambios de la parte anterior desde la branch donde hayan trabajado, de forma manual o con git cherry-pick.
+2. Pararse en la branch con su trabajo actual (`git switch <branch>`) y actualizarla con los nuevos contenidos mediante `git merge upstream/main`.
