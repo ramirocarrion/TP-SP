@@ -46,13 +46,33 @@ Las preguntas a continuación las pueden responder inline o en otro archivo mark
 
 1. Explorando el manual Intel *Volumen 3: System Programming. Sección 2.2 Modes of Operation*. ¿A qué nos referimos con modo real y con modo protegido en un procesador Intel? ¿Qué particularidades tiene cada modo?
 
+- Modo real: este modo de operación nos provee del ambiente de desarrollo del procesador Intel 8086, como la posibilidad de cambiar a modo protegido. Soporta 1 MB de direccionamiento fisico (puede más con A20), estas direcciones pestán divididas en segmentos de 64 KBytes de largo, la base de un segmento es especificada con un selector de segmento de 16 bits, el cual es shifteado a izquierda 4 bits para obtener un offset de 20 bits de la dirección 0. Luego se suma el offset de 16 bits a la base del segmento para obtener la dirección física, todos los operandos son de 8 o 16 bits, tenemos 8 registros de propósito general;  AX, BX, CX, DX, SP, BP, SI, y DI, 4 registros de segmento;  CS para código, DS y ES para datos, y SS para la pila. No hay protección de memoria ni niveles de privilegio.
+
+- Modo protegido: este es el modo nativo del procesador, nos provee de un buen set de caracteristicas arquitectonicas, flexibilidad, alto rendimiento y retrocompatibilidad con la base de software existente. Puede direccionar hasta 4GB de memoria, tiene 4 niveles de protección, sus instrucciones dependen del nivel de privilegio
+
 2. Comenten en su equipo, ¿Por qué debemos hacer el pasaje de modo real a modo protegido? ¿No podríamos simplemente tener un sistema operativo en modo real? ¿Qué desventajas tendría?
+
+- Podríamos hacer un sistema operativo en modo real, pero no aprovecharíamos todas las ventajas del modo protegido, como más direccionamiento de memoria, segmentación más compleja, niveles de privilegio, registros de mayor tamaño etc.
 
 Anteriormente, detallamos que la memoria es un arreglo continuo de bytes y que podemos segmentarla de acuerdo a tamaño, nivel de protección y uso. Debemos indicar al procesador la descripción de los segmentos, es decir, cómo están conformados los segmentos. Los ejercicios a continuación tienen que ver con el armado de la tabla de segmentos.
 
 3. Busquen el manual *volumen 3 de Intel en la sección 3.4.5 Segment Descriptors*. ¿Qué es la GDT? ¿Cómo es el formato de un descriptor de segmento, bit a bit? Expliquen brevemente para qué sirven los campos *Limit*, *Base*, *G*, *P*, *DPL*, *S*. También pueden referirse a los slides de la clase teórica, aunque recomendamos que se acostumbren a consultar el manual.
+
+- La GDT (Global Descriptor Table) es una estructura con descriptores de segmento, que proveen al procesador con información de los segmentos. formato de los descriptores de segmento:
+    - `SEGMENT LIMIT`: especifica el tamaño del segmento, con un total de 20 bits, 15:00 y 19:16, se puede interpretar diferente dependiendo del flag G (Granularity) y si es un segmento expand-up o expand-down.
+    - `BASE ADDRESS`: define el byte 0 dentro de los 4GB de direccionamiento, el procesador junta los 3 campos de base address para formar un solo valor de 32 bits.
+    - `TYPE`: indica el tipo del segmento o compuerta y especifica los tipos de acceso que se pueden realizar al semgento o la dirección de crecimiento.
+    - `S`: especifica si el descriptor de segmento es para un segmento de systema (S=0) o un segmento de codigo o datos (S=1).
+    - `DPL`: especifica el nivel de privilegio del segmento, con un rango de 0 a 3, siendo 0 el más privilegiado.
+    - `P`: indica si el segmento está presente en memoria (P=1) o no está presente (P=0)
+    - `D/B`: bit en 0 para 16 bits y en 1 para 32 bits
+    - `G`: cuando el flag de granularidad está en 0 el límite del segmento es interpretado en unidades de bytes, cuando G = 1, el límite es interpretado como unidades de 4 KBytes.
+    - `L`: indica cuando un segmento tiene codigo de 64 bits (L=1), si el bit de long está seteado, el D/B debe estar en 0.
+    - `AVL`: disponible para uso.
     
 4. La tabla de la sección 3.4.5.1 *Code- and Data-Segment Descriptor Types* del volumen 3 del manual del Intel nos permite completar el *Type*, los bits 11, 10, 9, 8. ¿Qué combinación de bits tendríamos que usar si queremos especificar un segmento para ejecución y lectura de código?
+
+- Primero debemos setear S para indicar que en un segmento de codigo o datos, el bit 11 en 1 para indicar que se trata de código, el bit 10 (C) en 0 porque no es conforming (todavía no sabemos que es eso), el bit 9 (R) para indicar que aparte de ejecutar se puede leer el código y el bit 8 (A) puede estar tanto en 1 como en 0 ya que este bit indica si un segmento fue accedido o no.
 
 ![](img/resolucion-dir-logica.png)
 
