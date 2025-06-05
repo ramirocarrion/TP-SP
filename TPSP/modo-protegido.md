@@ -98,6 +98,8 @@ Ahora, trabajemos con el código provisto por la cátedra. Vamos a completar la 
 
 6. En el archivo `gdt.h` observen las estructuras: `struct gdt_descriptor_t` y el `struct gdt_entry_t`. ¿Qué creen que contiene la variable `extern gdt_entry_t gdt;` y `extern gdt_descriptor_t GDT_DESC;`?
 
+- extern gdt_entry_t gdt es un array que contiene todos los datos de los segmentos y extern gdt_descriptor_t GDT_DESC me dice el largo de ese gdt y donde comienza.
+
 7. Buscar en el Volumen 3 del manual de Intel, sección 3.4.2 *Segment Selectors* el formato de los selectores de segmento. Observar en el archivo `defines.h` las constantes con los valores de distintos selectores de segmento posibles. Completen los defines faltantes en `defines.h` y entiendan la utilidad de las macros allí definidas. 
    **USAR LAS MACROS** para definir los campos de los entries de la gdt. En lo posible, no hardcodeen los números directamente en los campos.
 
@@ -109,7 +111,12 @@ Ahora, trabajemos con el código provisto por la cátedra. Vamos a completar la 
 
     *Hint*: investiguen para qué puede servir la instrucción **cli** en el manual 2.
 
+- CLI borra el flag IF en el registro EFLAGS y no afecta a ningún otro flag. Al borrar el flag IF, el procesador deja de atender las interrupciones externas enmascarables.
+
 10. Busquen qué hace la instrucción LGDT en el Volumen 2 del manual de Intel. Expliquen con sus palabras para qué sirve esta instrucción. En el código, ¿qué estructura indica donde está almacenada la dirección desde la cual se carga la GDT y su tamaño? ¿dónde se inicializa en el código?
+
+- La instrucción LGDT carga el  operando fuente en el GDTR, especifica 6 bytes de memoria, los 16 bits más bajos de operando son el límite y 32 bits para la dirección base.
+la estructura que indica la información de la gdt es la struct gdt_descriptor_t, ésta se declara en gdt.h y se define en gdt.c con GDT_DESC
 
 11. Completen el archivo `kernel.asm` en la sección de cargar la GDT usando lo averiguado en el punto 8 para cargar la GDT.
 
@@ -136,6 +143,8 @@ Recomendamos que también miren como referencia, el manual *volumen 3, sección 
 Ya hemos hecho los primeros, deshabilitar interrupciones y completar la GDT. También ya cargamos el registro GDTR correctamente. Ahora deberíamos, habilitar el modo protegido, hacer el *jmp far* y cargar los registros selectores de segmento.
 
 13. Investiguen en el manual de Intel *sección 2.5 Control Registers*, el registro CR0. ¿Deberíamos modificarlo para pasar a modo protegido? Si queremos modificar CR0, no podemos hacerlo directamente. Sólo mediante un MOV desde/hacia los registros de control (pueden leerlo en el manual en la sección citada).
+
+- Si, tenemos que modificarlo porque para entrar a modo protegido hay que activar la flag PE.
 
 14. A continuación, completen la sección del `kernel.asm` escribiendo un código que modifique CR0 para pasar a modo protegido. Tengan en cuenta las averiguaciones y comentarios del punto 13.
 
@@ -194,6 +203,22 @@ La pantalla va a ser un arreglo de 50 filas x 80 columnas. En cada posición del
 21. Declaren un segmento adicional que describa el área de la pantalla en memoria que pueda ser utilizado sólo por el kernel. ¿Qué tamaño deberá tener considerando lo descrito en el párrafo anterior? Si el buffer de la pantalla comienza en `0x000B8000`[^3], piensen cuál debería ser la base y el límite. El tipo de este segmento debe ser de datos de lectura/escritura. Finalmente, definan el segmento en el archivo `gdt.c`.
 
 22. Observen el método `screen_draw_box` en `screen.c` y la estructura `ca` en `screen.h` . ¿Qué creen que hace el método **screen_draw_box**? ¿Cómo hace para acceder a la pantalla? ¿Qué estructura usa para representar cada carácter de la pantalla y cuanto ocupa en memoria?
+
+- El método screen_draw_box se encarga de dibujar un rectángulo en la pantalla, utilizando caracteres y atributos especificados por el usuario. Recibe como parámetros:
+
+    fInit y cInit: Posición inicial (fila y columna) donde se comenzará a dibujar.
+
+    fSize y cSize: Tamaño de la pantalla en filas y columnas.
+
+    character: El carácter que se usará para llenar la pantalla.
+
+    attr: Los atributos del carácter, que incluyen información de color y otros aspectos.
+
+    (El ciclo for anidado recorre las filas y columnas del cuadro y escribe en cada posición el carácter y los atributos provistos)
+
+- El método accede a la pantalla mediante la variable p, que está mapeada a la dirección física del buffer de video 0x000B8000. El tipo de p es un puntero a un arreglo de tipo ca, que representa una celda en la pantalla. El acceso a la memoria de la pantalla se realiza utilizando este puntero para modificar las celdas correspondientes.
+
+- Usa la estructura ca, que es la que representa cada celda de la pantalla, tiene 2 bytes: 1 byte (uint8_t c) para el carácter y 1 byte (uint8_t a) para los atributos del carácter (como el color de fondo, color del texto, y otros atributos visuales). Por lo tanto, cada posición en el buffer de video ocupa exactamente 2 bytes en memoria.
 
 23. Escriban una rutina `screen_draw_layout` que se encargue de limpiar la pantalla y escribir el nombre de los integrantes del grupo (o lo que deseen) en la misma en el archivo `screen.c` y llamen a dicho método desde `kernel.asm`. Pueden usar diferentes fondos, colores e incorporar dibujos si así lo quisieran.
 
