@@ -46,13 +46,33 @@ Las preguntas a continuación las pueden responder inline o en otro archivo mark
 
 1. Explorando el manual Intel *Volumen 3: System Programming. Sección 2.2 Modes of Operation*. ¿A qué nos referimos con modo real y con modo protegido en un procesador Intel? ¿Qué particularidades tiene cada modo?
 
+- Modo real: este modo de operación nos provee del ambiente de desarrollo del procesador Intel 8086, como la posibilidad de cambiar a modo protegido. Soporta 1 MB de direccionamiento fisico (puede más con A20), estas direcciones pestán divididas en segmentos de 64 KBytes de largo, la base de un segmento es especificada con un selector de segmento de 16 bits, el cual es shifteado a izquierda 4 bits para obtener un offset de 20 bits de la dirección 0. Luego se suma el offset de 16 bits a la base del segmento para obtener la dirección física, todos los operandos son de 8 o 16 bits, tenemos 8 registros de propósito general;  AX, BX, CX, DX, SP, BP, SI, y DI, 4 registros de segmento;  CS para código, DS y ES para datos, y SS para la pila. No hay protección de memoria ni niveles de privilegio.
+
+- Modo protegido: este es el modo nativo del procesador, nos provee de un buen set de caracteristicas arquitectonicas, flexibilidad, alto rendimiento y retrocompatibilidad con la base de software existente. Puede direccionar hasta 4GB de memoria, tiene 4 niveles de protección, sus instrucciones dependen del nivel de privilegio
+
 2. Comenten en su equipo, ¿Por qué debemos hacer el pasaje de modo real a modo protegido? ¿No podríamos simplemente tener un sistema operativo en modo real? ¿Qué desventajas tendría?
+
+- Podríamos hacer un sistema operativo en modo real, pero no aprovecharíamos todas las ventajas del modo protegido, como más direccionamiento de memoria, segmentación más compleja, niveles de privilegio, registros de mayor tamaño etc.
 
 Anteriormente, detallamos que la memoria es un arreglo continuo de bytes y que podemos segmentarla de acuerdo a tamaño, nivel de protección y uso. Debemos indicar al procesador la descripción de los segmentos, es decir, cómo están conformados los segmentos. Los ejercicios a continuación tienen que ver con el armado de la tabla de segmentos.
 
 3. Busquen el manual *volumen 3 de Intel en la sección 3.4.5 Segment Descriptors*. ¿Qué es la GDT? ¿Cómo es el formato de un descriptor de segmento, bit a bit? Expliquen brevemente para qué sirven los campos *Limit*, *Base*, *G*, *P*, *DPL*, *S*. También pueden referirse a los slides de la clase teórica, aunque recomendamos que se acostumbren a consultar el manual.
+
+- La GDT (Global Descriptor Table) es una estructura con descriptores de segmento, que proveen al procesador con información de los segmentos. formato de los descriptores de segmento:
+    - `SEGMENT LIMIT`: especifica el tamaño del segmento, con un total de 20 bits, 15:00 y 19:16, se puede interpretar diferente dependiendo del flag G (Granularity) y si es un segmento expand-up o expand-down.
+    - `BASE ADDRESS`: define el byte 0 dentro de los 4GB de direccionamiento, el procesador junta los 3 campos de base address para formar un solo valor de 32 bits.
+    - `TYPE`: indica el tipo del segmento o compuerta y especifica los tipos de acceso que se pueden realizar al semgento o la dirección de crecimiento.
+    - `S`: especifica si el descriptor de segmento es para un segmento de systema (S=0) o un segmento de codigo o datos (S=1).
+    - `DPL`: especifica el nivel de privilegio del segmento, con un rango de 0 a 3, siendo 0 el más privilegiado.
+    - `P`: indica si el segmento está presente en memoria (P=1) o no está presente (P=0)
+    - `D/B`: bit en 0 para 16 bits y en 1 para 32 bits
+    - `G`: cuando el flag de granularidad está en 0 el límite del segmento es interpretado en unidades de bytes, cuando G = 1, el límite es interpretado como unidades de 4 KBytes.
+    - `L`: indica cuando un segmento tiene codigo de 64 bits (L=1), si el bit de long está seteado, el D/B debe estar en 0.
+    - `AVL`: disponible para uso.
     
 4. La tabla de la sección 3.4.5.1 *Code- and Data-Segment Descriptor Types* del volumen 3 del manual del Intel nos permite completar el *Type*, los bits 11, 10, 9, 8. ¿Qué combinación de bits tendríamos que usar si queremos especificar un segmento para ejecución y lectura de código?
+
+- Primero debemos setear S para indicar que en un segmento de codigo o datos, el bit 11 en 1 para indicar que se trata de código, el bit 10 (C) en 0 porque no es conforming (todavía no sabemos que es eso), el bit 9 (R) para indicar que aparte de ejecutar se puede leer el código y el bit 8 (A) puede estar tanto en 1 como en 0 ya que este bit indica si un segmento fue accedido o no.
 
 ![](img/resolucion-dir-logica.png)
 
@@ -78,6 +98,8 @@ Ahora, trabajemos con el código provisto por la cátedra. Vamos a completar la 
 
 6. En el archivo `gdt.h` observen las estructuras: `struct gdt_descriptor_t` y el `struct gdt_entry_t`. ¿Qué creen que contiene la variable `extern gdt_entry_t gdt;` y `extern gdt_descriptor_t GDT_DESC;`?
 
+- extern gdt_entry_t gdt es un array que contiene todos los datos de los segmentos y extern gdt_descriptor_t GDT_DESC me dice el largo de ese gdt y donde comienza.
+
 7. Buscar en el Volumen 3 del manual de Intel, sección 3.4.2 *Segment Selectors* el formato de los selectores de segmento. Observar en el archivo `defines.h` las constantes con los valores de distintos selectores de segmento posibles. Completen los defines faltantes en `defines.h` y entiendan la utilidad de las macros allí definidas. 
    **USAR LAS MACROS** para definir los campos de los entries de la gdt. En lo posible, no hardcodeen los números directamente en los campos.
 
@@ -89,7 +111,12 @@ Ahora, trabajemos con el código provisto por la cátedra. Vamos a completar la 
 
     *Hint*: investiguen para qué puede servir la instrucción **cli** en el manual 2.
 
+- CLI borra el flag IF en el registro EFLAGS y no afecta a ningún otro flag. Al borrar el flag IF, el procesador deja de atender las interrupciones externas enmascarables.
+
 10. Busquen qué hace la instrucción LGDT en el Volumen 2 del manual de Intel. Expliquen con sus palabras para qué sirve esta instrucción. En el código, ¿qué estructura indica donde está almacenada la dirección desde la cual se carga la GDT y su tamaño? ¿dónde se inicializa en el código?
+
+- La instrucción LGDT carga el  operando fuente en el GDTR, especifica 6 bytes de memoria, los 16 bits más bajos de operando son el límite y 32 bits para la dirección base.
+la estructura que indica la información de la gdt es la struct gdt_descriptor_t, ésta se declara en gdt.h y se define en gdt.c con GDT_DESC
 
 11. Completen el archivo `kernel.asm` en la sección de cargar la GDT usando lo averiguado en el punto 8 para cargar la GDT.
 
@@ -116,6 +143,8 @@ Recomendamos que también miren como referencia, el manual *volumen 3, sección 
 Ya hemos hecho los primeros, deshabilitar interrupciones y completar la GDT. También ya cargamos el registro GDTR correctamente. Ahora deberíamos, habilitar el modo protegido, hacer el *jmp far* y cargar los registros selectores de segmento.
 
 13. Investiguen en el manual de Intel *sección 2.5 Control Registers*, el registro CR0. ¿Deberíamos modificarlo para pasar a modo protegido? Si queremos modificar CR0, no podemos hacerlo directamente. Sólo mediante un MOV desde/hacia los registros de control (pueden leerlo en el manual en la sección citada).
+
+- Si, tenemos que modificarlo porque para entrar a modo protegido hay que activar la flag PE.
 
 14. A continuación, completen la sección del `kernel.asm` escribiendo un código que modifique CR0 para pasar a modo protegido. Tengan en cuenta las averiguaciones y comentarios del punto 13.
 
@@ -174,6 +203,22 @@ La pantalla va a ser un arreglo de 50 filas x 80 columnas. En cada posición del
 21. Declaren un segmento adicional que describa el área de la pantalla en memoria que pueda ser utilizado sólo por el kernel. ¿Qué tamaño deberá tener considerando lo descrito en el párrafo anterior? Si el buffer de la pantalla comienza en `0x000B8000`[^3], piensen cuál debería ser la base y el límite. El tipo de este segmento debe ser de datos de lectura/escritura. Finalmente, definan el segmento en el archivo `gdt.c`.
 
 22. Observen el método `screen_draw_box` en `screen.c` y la estructura `ca` en `screen.h` . ¿Qué creen que hace el método **screen_draw_box**? ¿Cómo hace para acceder a la pantalla? ¿Qué estructura usa para representar cada carácter de la pantalla y cuanto ocupa en memoria?
+
+- El método screen_draw_box se encarga de dibujar un rectángulo en la pantalla, utilizando caracteres y atributos especificados por el usuario. Recibe como parámetros:
+
+    fInit y cInit: Posición inicial (fila y columna) donde se comenzará a dibujar.
+
+    fSize y cSize: Tamaño de la pantalla en filas y columnas.
+
+    character: El carácter que se usará para llenar la pantalla.
+
+    attr: Los atributos del carácter, que incluyen información de color y otros aspectos.
+
+    (El ciclo for anidado recorre las filas y columnas del cuadro y escribe en cada posición el carácter y los atributos provistos)
+
+- El método accede a la pantalla mediante la variable p, que está mapeada a la dirección física del buffer de video 0x000B8000. El tipo de p es un puntero a un arreglo de tipo ca, que representa una celda en la pantalla. El acceso a la memoria de la pantalla se realiza utilizando este puntero para modificar las celdas correspondientes.
+
+- Usa la estructura ca, que es la que representa cada celda de la pantalla, tiene 2 bytes: 1 byte (uint8_t c) para el carácter y 1 byte (uint8_t a) para los atributos del carácter (como el color de fondo, color del texto, y otros atributos visuales). Por lo tanto, cada posición en el buffer de video ocupa exactamente 2 bytes en memoria.
 
 23. Escriban una rutina `screen_draw_layout` que se encargue de limpiar la pantalla y escribir el nombre de los integrantes del grupo (o lo que deseen) en la misma en el archivo `screen.c` y llamen a dicho método desde `kernel.asm`. Pueden usar diferentes fondos, colores e incorporar dibujos si así lo quisieran.
 

@@ -70,4 +70,23 @@ void screen_draw_box(uint32_t fInit, uint32_t cInit, uint32_t fSize,
 }
 
 void screen_draw_layout(void) {
+  ca(*p)[VIDEO_COLS] = (ca(*)[VIDEO_COLS])VIDEO;
+
+  uint32_t f;
+  uint32_t c;
+  for (f = 0; f < VIDEO_FILS; f++){
+    for (c = 0; c < VIDEO_COLS; c++){
+      p[f][c].c = ' ';  // Espacio en blanco
+      p[f][c].a = 0x07; // Fondo negro, texto blanco
+    }
+  }
+
+  const char* nombre1 = "Leandro Waserman";
+  const char* nombre2 = "Tobias Cogliano";
+  const char* nombre3 = "Ramiro Carrion";
+
+  print(nombre1, 10, 0, 0x1F);  // Fondo azul, texto blanco
+  print(nombre2, 30, 0, 0x2F); // Fondo verde, texto blanco
+  print(nombre3, 50, 0, 0x4F); // Fondo rojo, texto blanco
 }
+
